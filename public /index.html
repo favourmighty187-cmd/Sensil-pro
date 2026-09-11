@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>SENSI PRO</title>
+
+<style>
+
+*{
+box-sizing:border-box;
+margin:0;
+padding:0;
+}
+
+body{
+font-family:Arial,sans-serif;
+background:#07070b;
+color:white;
+}
+
+.container{
+max-width:900px;
+margin:auto;
+padding:25px 16px;
+}
+
+.card{
+background:#11121a;
+border:1px solid #292b38;
+border-radius:20px;
+padding:22px;
+margin-bottom:18px;
+box-shadow:0 10px 35px rgba(0,0,0,.35);
+}
+
+.logo{
+font-size:42px;
+font-weight:900;
+letter-spacing:2px;
+}
+
+.purple{
+color:#7c5cff;
+}
+
+.muted{
+color:#a8a9b5;
+}
+
+h2{
+margin-bottom:15px;
+}
+
+.devices{
+display:grid;
+grid-template-columns:
+repeat(auto-fit,minmax(140px,1fr));
+gap:10px;
+}
+
+.device{
+padding:15px;
+background:#191b25;
+border:1px solid #333646;
+border-radius:12px;
+cursor:pointer;
+text-align:center;
+transition:.2s;
+}
+
+.device:hover{
+transform:translateY(-2px);
+}
+
+.device.active{
+border-color:#7c5cff;
+background:#211b3d;
+}
+
+.price{
+font-size:38px;
+font-weight:900;
+margin:10px 0 15px;
+}
+
+.payment{
+background:#191a24;
+padding:17px;
+border-radius:12px;
+line-height:1.9;
+}
+
+input,
+button{
+width:100%;
+padding:14px;
+margin-top:10px;
+border-radius:11px;
+border:1px solid #363847;
+background:#191b25;
+color:white;
+font-size:15px;
+}
+
+button{
+background:#7c5cff;
+border:0;
+font-weight:bold;
+cursor:pointer;
+}
+
+button:disabled{
+opacity:.5;
+cursor:not-allowed;
+}
+
+.hidden{
+display:none;
+}
+
+.locked{
+filter:blur(8px);
+user-select:none;
+}
+
+.success{
+color:#50e58a;
+}
+
+.error{
+color:#ff6677;
+}
+
+.order{
+background:#191a24;
+padding:12px;
+border-radius:10px;
+margin-top:12px;
+}
+
+.badge{
+display:inline-block;
+padding:6px 10px;
+background:#292b38;
+border-radius:20px;
+font-size:12px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- HEADER -->
+
+<div class="card">
+
+<p class="muted">
+PREMIUM FREE FIRE SETTINGS
+</p>
+
+<div class="logo">
+SENSI <span class="purple">PRO</span>
+</div>
+
+<p class="muted">
+Device-specific sensitivity settings
+designed for your gameplay.
+</p>
+
+</div>
+
+
+<!-- DEVICE SELECTION -->
+
+<div class="card">
+
+<h2>
+1. Choose your device
+</h2>
+
+<div
+class="devices"
+id="devices">
+</div>
+
+</div>
+
+
+<!-- PAYMENT -->
+
+<div class="card">
+
+<h2>
+2. Payment
+</h2>
+
+<div class="price">
+₦800
+</div>
+
+<div class="payment">
+
+<b>Payment Method:</b>
+OPay
+
+<br>
+
+<b>Account Name:</b>
+MIGHTY FAVOUR
+
+<br>
+
+<b>Account Number:</b>
+7013342843
+
+</div>
+
+<button
+id="paidBtn"
+disabled>
+
+I've Paid — Submit Proof
+
+</button>
+
+</div>
+
+
+<!-- PAYMENT PROOF -->
+
+<div
+class="card hidden"
+id="uploadCard">
+
+<h2>
+3. Payment Verification
+</h2>
+
+<p class="muted">
+
+After making the ₦800 payment,
+upload your receipt or a short
+screen recording showing the payment.
+
+</p>
+
+<input
+id="name"
+type="text"
+placeholder="Your name / nickname"
+>
+
+<input
+id="proof"
+type="file"
+accept="image/*,video/*"
+>
+
+<button
+id="submitBtn">
+
+Submit Payment Proof
+
+</button>
+
+<p id="status"></p>
+
+</div>
+
+
+<!-- LOCKED SENSITIVITY -->
+
+<div
+class="card hidden"
+id="lockedCard">
+
+<h2>
+🔒 Sensitivity Locked
+</h2>
+
+<div
+class="payment locked">
+
+General:
+180
+
+<br>
+
+Red Dot:
+170
+
+<br>
+
+2x Scope:
+165
+
+<br>
+
+4x Scope:
+155
+
+<br>
+
+Sniper:
+90
+
+<br>
+
+Free Look:
+120
+
+</div>
+
+<p class="muted">
+
+Your payment is being reviewed.
+
+</p>
+
+<div class="order">
+
+Order ID:
+<b id="orderId">
+-
+</b>
+
+<br><br>
+
+<span class="badge">
+AWAITING VERIFICATION
+</span>
+
+</div>
+
+</div>
+
+
+<!-- UNLOCKED -->
+
+<div
+class="card hidden"
+id="resultCard">
+
+<h2 class="success">
+
+✓ Payment Approved
+
+</h2>
+
+<p id="resultText"></p>
+
+<br>
+
+<div class="payment">
+
+General:
+<b>180</b>
+
+<br>
+
+Red Dot:
+<b>170</b>
+
+<br>
+
+2x Scope:
+<b>165</b>
+
+<br>
+
+4x Scope:
+<b>155</b>
+
+<br>
+
+Sniper:
+<b>90</b>
+
+<br>
+
+Free Look:
+<b>120</b>
+
+</div>
+
+</div>
+
+</div>
+
+
+<script>
+
+const devices=[
+
+"Oppo A53",
+"Oppo F1s",
+"Oppo F19",
+"Tecno Spark 20C",
+"Samsung A12",
+"Samsung A13",
+"Samsung A14",
+"Samsung A15",
+"iPhone 11",
+"iPhone 12",
+"iPhone 13",
+"Redmi Note 10",
+"Redmi Note 12",
+"Infinix Hot 12",
+"Infinix Hot 30",
+"Tecno Camon 20",
+"Tecno Camon 30",
+"Vivo Y20",
+"Other"
+
+];
+
+
+let selectedDevice="";
+
+let orderId="";
+
+
+const deviceBox=
+document.getElementById("devices");
+
+
+devices.forEach(device=>{
+
+const element=
+document.createElement("div");
+
+element.className="device";
+
+element.textContent=device;
+
+
+element.onclick=()=>{
+
+document
+.querySelectorAll(".device")
+.forEach(x=>
+x.classList.remove("active")
+);
+
+element.classList.add("active");
+
+selectedDevice=device;
+
+document.getElementById(
+"paidBtn"
+).disabled=false;
+
+};
+
+deviceBox.appendChild(element);
+
+});
+
+
+/* OPEN UPLOAD AREA */
+
+document.getElementById(
+"paidBtn"
+).onclick=()=>{
+
+document.getElementById(
+"uploadCard"
+).classList.remove("hidden");
+
+document.getElementById(
+"uploadCard"
+).scrollIntoView({
+behavior:"smooth"
+});
+
+};
+
+
+/* SUBMIT PAYMENT */
+
+document.getElementById(
+"submitBtn"
+).onclick=async()=>{
+
+const name=
+document.getElementById(
+"name"
+).value.trim();
+
+const file=
+document.getElementById(
+"proof"
+).files[0];
+
+const status=
+document.getElementById(
+"status"
+);
+
+
+if(
+!name ||
+!file ||
+!selectedDevice
+){
+
+status.className="error";
+
+status.textContent=
+"Please choose your device, enter your name and upload your payment proof.";
+
+return;
+
+}
+
+
+if(
+file.size >
+25*1024*1024
+){
+
+status.className="error";
+
+status.textContent=
+"Maximum file size is 25MB.";
+
+return;
+
+}
+
+
+const formData=
+new FormData();
+
+formData.append(
+"name",
+name
+);
+
+formData.append(
+"device",
+selectedDevice
+);
+
+formData.append(
+"proof",
+file
+);
+
+
+status.className="";
+
+status.textContent=
+"Submitting payment proof...";
+
+
+try{
+
+const response=
+await fetch(
+"/api/orders",
+{
+method:"POST",
+body:formData
+}
+);
+
+
+const data=
+await response.json();
+
+
+if(!response.ok){
+
+throw new Error(
+data.error ||
+"Submission failed"
+);
+
+}
+
+
+orderId=
+data.orderId;
+
+
+status.className=
+"success";
+
+status.textContent=
+"Payment proof submitted successfully.";
+
+
+document.getElementById(
+"orderId"
+).textContent=
+orderId;
+
+
+document.getElementById(
+"lockedCard"
+).classList.remove(
+"hidden"
+);
+
+
+checkOrder();
+
+
+}catch(error){
+
+status.className="error";
+
+status.textContent=
+error.message;
+
+}
+
+};
+
+
+/* CHECK APPROVAL */
+
+async function checkOrder(){
+
+if(!orderId)
+return;
+
+
+try{
+
+const response=
+await fetch(
+"/api/orders/"
++
+encodeURIComponent(orderId)
+);
+
+
+const data=
+await response.json();
+
+
+if(
+data.status ===
+"approved"
+){
+
+document.getElementById(
+"lockedCard"
+).classList.add(
+"hidden"
+);
+
+
+document.getElementById(
+"resultCard"
+).classList.remove(
+"hidden"
+);
+
+
+document.getElementById(
+"resultText"
+).textContent=
+"Your "
++
+data.device
++
+" sensitivity has been unlocked.";
+
+return;
+
+}
+
+
+if(
+data.status ===
+"rejected"
+){
+
+document.getElementById(
+"status"
+).className="error";
+
+document.getElementById(
+"status"
+).textContent=
+"Your payment proof was rejected. Please contact support.";
+
+return;
+
+}
+
+
+setTimeout(
+checkOrder,
+5000
+);
+
+
+}catch(error){
+
+setTimeout(
+checkOrder,
+5000
+);
+
+}
+
+}
+
+</script>
+
+</body>
+</html>
