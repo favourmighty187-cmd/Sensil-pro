@@ -28,7 +28,9 @@ const upload = multer({
 });
 
 app.use(express.json());
-
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 app.use(
   express.static(path.join(__dirname, "public"))
 );
@@ -171,7 +173,7 @@ app.get(
       getOrders().sort(
         (a, b) =>
           b.createdAt
-            .localeCompare(b.createdAt)
+            .localeCompare(a.createdAt)
       );
 
     res.json({
