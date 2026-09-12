@@ -228,7 +228,9 @@ app.post(
     });
   }
 );
-
+console.log("DIR:", __dirname);
+console.log("PUBLIC EXISTS:", fs.existsSync(path.join(__dirname, "public")));
+console.log("INDEX EXISTS:", fs.existsSync(path.join(__dirname, "public", "index.html")));
 app.listen(
   PORT,
   () => {
