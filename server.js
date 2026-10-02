@@ -62,6 +62,7 @@ function findPage(name) {
 app.get("/", (req, res) => res.sendFile(findPage("index.html")));
 app.get("/index.html", (req, res) => res.sendFile(findPage("index.html")));
 app.get("/device.html", (req, res) => res.sendFile(findPage("device.html")));
+app.get("/payment.html", (req, res) => res.sendFile(findPage("payment.html")));
 app.get("/upload.html", (req, res) => res.sendFile(findPage("upload.html")));
 app.get("/admin", (req, res) => res.sendFile(findPage("admin.html")));
 app.get("/admin.html", (req, res) => res.sendFile(findPage("admin.html")));
