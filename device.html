@@ -20,8 +20,6 @@ h3{margin:18px 0 10px;font-size:15px;color:#a8a9b5}
 .device:hover{transform:translateY(-2px)}
 .device.active{border-color:#7c5cff;background:#211b3d}
 .empty{color:#a8a9b5;padding:14px 0}
-.price{font-size:38px;font-weight:900;margin:10px 0 15px}
-.payment{background:#191a24;padding:17px;border-radius:12px;line-height:1.9}
 .muted{color:#a8a9b5}
 .hidden{display:none}
 .next{position:fixed;left:0;right:0;bottom:0;padding:16px;background:linear-gradient(to top, #07070b 60%, transparent)}
@@ -34,7 +32,7 @@ h3{margin:18px 0 10px;font-size:15px;color:#a8a9b5}
 
   <div class="top">
     <a class="back" href="index.html" aria-label="Back">&#8592;</a>
-    <span class="step">Step 1 of 2</span>
+    <span class="step">Step 1 of 3</span>
   </div>
 
   <div class="card">
@@ -45,20 +43,10 @@ h3{margin:18px 0 10px;font-size:15px;color:#a8a9b5}
     <p class="empty hidden" id="empty">No match. Choose "Other" at the bottom of the list.</p>
   </div>
 
-  <div class="card">
-    <h2>Payment</h2>
-    <div class="price">&#8358;800</div>
-    <div class="payment">
-      <b>Payment Method:</b> OPay<br>
-      <b>Account Name:</b> MIGHTY FAVOUR<br>
-      <b>Account Number:</b> 7013342843
-    </div>
-  </div>
-
 </div>
 
 <div class="next">
-  <button id="continueBtn" disabled>I've Paid — Continue</button>
+  <button id="continueBtn" disabled>Continue to payment</button>
 </div>
 
 <script>
@@ -132,7 +120,7 @@ if (selected) continueBtn.disabled = false;
 continueBtn.onclick = () => {
   if (!selected) return;
   try { sessionStorage.setItem("sp_device", selected); } catch(e){}
-  location.href = "upload.html";
+  location.href = "payment.html";
 };
 </script>
 </body>
