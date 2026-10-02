@@ -1,723 +1,271 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- SENSI PRO -->
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>SENSI PRO</title>
-
 <style>
-
-*{
-box-sizing:border-box;
-margin:0;
-padding:0;
-}
-
-body{
-font-family:Arial,sans-serif;
-background:#07070b;
-color:white;
-}
-
-.container{
-max-width:900px;
-margin:auto;
-padding:25px 16px;
-}
-
-.card{
-background:#11121a;
-border:1px solid #292b38;
-border-radius:20px;
-padding:22px;
-margin-bottom:18px;
-box-shadow:0 10px 35px rgba(0,0,0,.35);
-}
-
-.logo{
-font-size:42px;
-font-weight:900;
-letter-spacing:2px;
-}
-
-.purple{
-color:#7c5cff;
-}
-
-.muted{
-color:#a8a9b5;
-}
-
-h2{
-margin-bottom:15px;
-}
-
-.devices{
-display:grid;
-grid-template-columns:
-repeat(auto-fit,minmax(140px,1fr));
-gap:10px;
-}
-
-.device{
-padding:15px;
-background:#191b25;
-border:1px solid #333646;
-border-radius:12px;
-cursor:pointer;
-text-align:center;
-transition:.2s;
-}
-
-.device:hover{
-transform:translateY(-2px);
-}
-
-.device.active{
-border-color:#7c5cff;
-background:#211b3d;
-}
-
-.price{
-font-size:38px;
-font-weight:900;
-margin:10px 0 15px;
-}
-
-.payment{
-background:#191a24;
-padding:17px;
-border-radius:12px;
-line-height:1.9;
-}
-
-input,
-button{
-width:100%;
-padding:14px;
-margin-top:10px;
-border-radius:11px;
-border:1px solid #363847;
-background:#191b25;
-color:white;
-font-size:15px;
-}
-
-button{
-background:#7c5cff;
-border:0;
-font-weight:bold;
-cursor:pointer;
-}
-
-button:disabled{
-opacity:.5;
-cursor:not-allowed;
-}
-
-.hidden{
-display:none;
-}
-
-.locked{
-filter:blur(8px);
-user-select:none;
-}
-
-.success{
-color:#50e58a;
-}
-
-.error{
-color:#ff6677;
-}
-
-.order{
-background:#191a24;
-padding:12px;
-border-radius:10px;
-margin-top:12px;
-}
-
-.badge{
-display:inline-block;
-padding:6px 10px;
-background:#292b38;
-border-radius:20px;
-font-size:12px;
-}
-
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#07070b;color:#fff}
+.container{max-width:900px;margin:auto;padding:25px 16px}
+.card{background:#11121a;border:1px solid #292b38;border-radius:20px;padding:22px;margin-bottom:18px;box-shadow:0 10px 35px rgba(0,0,0,.35)}
+.logo{font-size:42px;font-weight:900;letter-spacing:2px}
+.purple{color:#7c5cff}
+.muted{color:#a8a9b5}
+h2{margin-bottom:15px}
+.devices{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
+.device{padding:15px;background:#191b25;border:1px solid #333646;border-radius:12px;cursor:pointer;text-align:center;transition:.2s;color:#fff;font-size:15px;margin:0;width:auto}
+.device:hover{transform:translateY(-2px)}
+.device.active{border-color:#7c5cff;background:#211b3d}
+.price{font-size:38px;font-weight:900;margin:10px 0 15px}
+.payment{background:#191a24;padding:17px;border-radius:12px;line-height:1.9}
+input,button{width:100%;padding:14px;margin-top:10px;border-radius:11px;border:1px solid #363847;background:#191b25;color:#fff;font-size:15px}
+button.primary{background:#7c5cff;border:0;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:2px solid #7c5cff;outline-offset:2px}
+.hidden{display:none}
+.success{color:#50e58a}
+.error{color:#ff6677}
+.order{background:#191a24;padding:12px;border-radius:10px;margin-top:12px}
+.badge{display:inline-block;padding:6px 10px;background:#292b38;border-radius:20px;font-size:12px}
+#status{margin-top:10px}
 </style>
-
 </head>
-
 <body>
-
 <div class="container">
 
-<!-- HEADER -->
-
 <div class="card">
-
-<p class="muted">
-PREMIUM FREE FIRE SETTINGS
-</p>
-
-<div class="logo">
-SENSI <span class="purple">PRO</span>
+  <p class="muted">PREMIUM FREE FIRE SETTINGS</p>
+  <div class="logo">SENSI <span class="purple">PRO</span></div>
+  <p class="muted">Device-specific sensitivity settings designed for your gameplay.</p>
 </div>
 
-<p class="muted">
-Device-specific sensitivity settings
-designed for your gameplay.
-</p>
-
+<div class="card" id="deviceCard">
+  <h2>1. Choose your device</h2>
+  <div class="devices" id="devices"></div>
 </div>
 
-
-<!-- DEVICE SELECTION -->
-
-<div class="card">
-
-<h2>
-1. Choose your device
-</h2>
-
-<div
-class="devices"
-id="devices">
+<div class="card" id="payCard">
+  <h2>2. Payment</h2>
+  <div class="price">₦800</div>
+  <div class="payment">
+    <b>Payment Method:</b> OPay<br>
+    <b>Account Name:</b> MIGHTY FAVOUR<br>
+    <b>Account Number:</b> 7013342843
+  </div>
+  <button class="primary" id="paidBtn" disabled>I've Paid — Submit Proof</button>
 </div>
 
+<div class="card hidden" id="uploadCard">
+  <h2>3. Payment Verification</h2>
+  <p class="muted">After making the ₦800 payment, upload your receipt or a short screen recording showing the payment.</p>
+  <input id="name" type="text" placeholder="Your name / nickname" maxlength="60" autocomplete="nickname" aria-label="Your name or nickname">
+  <input id="proof" type="file" accept="image/*,video/*" aria-label="Payment proof">
+  <button class="primary" id="submitBtn">Submit Payment Proof</button>
+  <p id="status" role="status"></p>
 </div>
 
-
-<!-- PAYMENT -->
-
-<div class="card">
-
-<h2>
-2. Payment
-</h2>
-
-<div class="price">
-₦800
+<div class="card hidden" id="lockedCard">
+  <h2>🔒 Sensitivity Locked</h2>
+  <p class="muted" id="lockedText">Your payment is being reviewed.</p>
+  <div class="order">
+    Order ID: <b id="orderId">-</b><br><br>
+    <span class="badge" id="badge">AWAITING VERIFICATION</span>
+  </div>
+  <button class="primary hidden" id="newOrderBtn">Start a new order</button>
 </div>
 
-<div class="payment">
-
-<b>Payment Method:</b>
-OPay
-
-<br>
-
-<b>Account Name:</b>
-MIGHTY FAVOUR
-
-<br>
-
-<b>Account Number:</b>
-7013342843
-
-</div>
-
-<button
-id="paidBtn"
-disabled>
-
-I've Paid — Submit Proof
-
-</button>
-
-</div>
-
-
-<!-- PAYMENT PROOF -->
-
-<div
-class="card hidden"
-id="uploadCard">
-
-<h2>
-3. Payment Verification
-</h2>
-
-<p class="muted">
-
-After making the ₦800 payment,
-upload your receipt or a short
-screen recording showing the payment.
-
-</p>
-
-<input
-id="name"
-type="text"
-placeholder="Your name / nickname"
->
-
-<input
-id="proof"
-type="file"
-accept="image/*,video/*"
->
-
-<button
-id="submitBtn">
-
-Submit Payment Proof
-
-</button>
-
-<p id="status"></p>
-
-</div>
-
-
-<!-- LOCKED SENSITIVITY -->
-
-<div
-class="card hidden"
-id="lockedCard">
-
-<h2>
-🔒 Sensitivity Locked
-</h2>
-
-<div
-class="payment locked">
-
-General:
-180
-
-<br>
-
-Red Dot:
-170
-
-<br>
-
-2x Scope:
-165
-
-<br>
-
-4x Scope:
-155
-
-<br>
-
-Sniper:
-90
-
-<br>
-
-Free Look:
-120
-
-</div>
-
-<p class="muted">
-
-Your payment is being reviewed.
-
-</p>
-
-<div class="order">
-
-Order ID:
-<b id="orderId">
--
-</b>
-
-<br><br>
-
-<span class="badge">
-AWAITING VERIFICATION
-</span>
-
+<div class="card hidden" id="resultCard">
+  <h2 class="success">✓ Payment Approved</h2>
+  <p id="resultText"></p><br>
+  <div class="payment" id="settingsBox"></div>
 </div>
 
 </div>
-
-
-<!-- UNLOCKED -->
-
-<div
-class="card hidden"
-id="resultCard">
-
-<h2 class="success">
-
-✓ Payment Approved
-
-</h2>
-
-<p id="resultText"></p>
-
-<br>
-
-<div class="payment">
-
-General:
-<b>180</b>
-
-<br>
-
-Red Dot:
-<b>170</b>
-
-<br>
-
-2x Scope:
-<b>165</b>
-
-<br>
-
-4x Scope:
-<b>155</b>
-
-<br>
-
-Sniper:
-<b>90</b>
-
-<br>
-
-Free Look:
-<b>120</b>
-
-</div>
-
-</div>
-
-</div>
-
 
 <script>
+/* ---------- CONFIG ---------- */
+const SUPPORT_CONTACT = "WhatsApp: +234XXXXXXXXXX"; // <-- put your real contact here
+const MAX_FILE_MB = 25;
+const POLL_MS = 5000;
+const POLL_TIMEOUT_MS = 30 * 60 * 1000;
+const STORE_KEY = "sensipro_order";
 
-const devices=[
-
-"Oppo A53",
-"Oppo F1s",
-"Oppo F19",
-"Tecno Spark 20C",
-"Samsung A12",
-"Samsung A13",
-"Samsung A14",
-"Samsung A15",
-"iPhone 11",
-"iPhone 12",
-"iPhone 13",
-"Redmi Note 10",
-"Redmi Note 12",
-"Infinix Hot 12",
-"Infinix Hot 30",
-"Tecno Camon 20",
-"Tecno Camon 30",
-"Vivo Y20",
-"Other"
-
+const devices = [
+  "Oppo A53","Oppo F1s","Oppo F19","Tecno Spark 20C","Samsung A12","Samsung A13",
+  "Samsung A14","Samsung A15","iPhone 11","iPhone 12","iPhone 13","Redmi Note 10",
+  "Redmi Note 12","Infinix Hot 12","Infinix Hot 30","Tecno Camon 20","Tecno Camon 30",
+  "Vivo Y20","Other"
 ];
 
+const $ = id => document.getElementById(id);
+let selectedDevice = "";
+let orderId = "";
+let pollStart = 0;
+let pollTimer = null;
 
-let selectedDevice="";
+/* ---------- SAFE STORAGE ---------- */
+function saveOrder(id){ try{ localStorage.setItem(STORE_KEY, id); }catch(e){} }
+function loadOrder(){ try{ return localStorage.getItem(STORE_KEY) || ""; }catch(e){ return ""; } }
+function clearOrder(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} }
 
-let orderId="";
-
-
-const deviceBox=
-document.getElementById("devices");
-
-
-devices.forEach(device=>{
-
-const element=
-document.createElement("div");
-
-element.className="device";
-
-element.textContent=device;
-
-
-element.onclick=()=>{
-
-document
-.querySelectorAll(".device")
-.forEach(x=>
-x.classList.remove("active")
-);
-
-element.classList.add("active");
-
-selectedDevice=device;
-
-document.getElementById(
-"paidBtn"
-).disabled=false;
-
-};
-
-deviceBox.appendChild(element);
-
+/* ---------- DEVICE LIST ---------- */
+devices.forEach(device => {
+  const el = document.createElement("button");
+  el.type = "button";
+  el.className = "device";
+  el.textContent = device;
+  el.onclick = () => {
+    document.querySelectorAll(".device").forEach(x => x.classList.remove("active"));
+    el.classList.add("active");
+    selectedDevice = device;
+    $("paidBtn").disabled = false;
+  };
+  $("devices").appendChild(el);
 });
 
-
-/* OPEN UPLOAD AREA */
-
-document.getElementById(
-"paidBtn"
-).onclick=()=>{
-
-document.getElementById(
-"uploadCard"
-).classList.remove("hidden");
-
-document.getElementById(
-"uploadCard"
-).scrollIntoView({
-behavior:"smooth"
-});
-
+$("paidBtn").onclick = () => {
+  $("uploadCard").classList.remove("hidden");
+  $("uploadCard").scrollIntoView({behavior:"smooth"});
 };
 
-
-/* SUBMIT PAYMENT */
-
-document.getElementById(
-"submitBtn"
-).onclick=async()=>{
-
-const name=
-document.getElementById(
-"name"
-).value.trim();
-
-const file=
-document.getElementById(
-"proof"
-).files[0];
-
-const status=
-document.getElementById(
-"status"
-);
-
-
-if(
-!name ||
-!file ||
-!selectedDevice
-){
-
-status.className="error";
-
-status.textContent=
-"Please choose your device, enter your name and upload your payment proof.";
-
-return;
-
+/* ---------- HELPERS ---------- */
+async function readJson(response){
+  try{ return await response.json(); }catch(e){ return {}; }
 }
 
-
-if(
-file.size >
-25*1024*1024
-){
-
-status.className="error";
-
-status.textContent=
-"Maximum file size is 25MB.";
-
-return;
-
+function setStatus(text, cls){
+  $("status").className = cls || "";
+  $("status").textContent = text;
 }
 
-
-const formData=
-new FormData();
-
-formData.append(
-"name",
-name
-);
-
-formData.append(
-"device",
-selectedDevice
-);
-
-formData.append(
-"proof",
-file
-);
-
-
-status.className="";
-
-status.textContent=
-"Submitting payment proof...";
-
-
-try{
-
-const response=
-await fetch(
-"/api/orders",
-{
-method:"POST",
-body:formData
-}
-);
-
-
-const data=
-await response.json();
-
-
-if(!response.ok){
-
-throw new Error(
-data.error ||
-"Submission failed"
-);
-
+function showLocked(id){
+  orderId = id;
+  $("orderId").textContent = id;
+  $("lockedText").textContent = "Your payment is being reviewed.";
+  $("badge").textContent = "AWAITING VERIFICATION";
+  $("newOrderBtn").classList.add("hidden");
+  $("lockedCard").classList.remove("hidden");
+  $("uploadCard").classList.add("hidden");
 }
 
-
-orderId=
-data.orderId;
-
-
-status.className=
-"success";
-
-status.textContent=
-"Payment proof submitted successfully.";
-
-
-document.getElementById(
-"orderId"
-).textContent=
-orderId;
-
-
-document.getElementById(
-"lockedCard"
-).classList.remove(
-"hidden"
-);
-
-
-checkOrder();
-
-
-}catch(error){
-
-status.className="error";
-
-status.textContent=
-error.message;
-
+function renderSettings(settings){
+  const box = $("settingsBox");
+  box.textContent = "";
+  Object.entries(settings || {}).forEach(([label, value]) => {
+    const line = document.createElement("div");
+    line.append(label + ": ");
+    const b = document.createElement("b");
+    b.textContent = value;
+    line.appendChild(b);
+    box.appendChild(line);
+  });
 }
 
+function resetFlow(){
+  clearTimeout(pollTimer);
+  clearOrder();
+  orderId = "";
+  $("lockedCard").classList.add("hidden");
+  $("resultCard").classList.add("hidden");
+  $("uploadCard").classList.remove("hidden");
+  $("proof").value = "";
+  $("submitBtn").disabled = false;
+  setStatus("");
+}
+$("newOrderBtn").onclick = resetFlow;
+
+/* ---------- SUBMIT PAYMENT ---------- */
+$("submitBtn").onclick = async () => {
+  const name = $("name").value.trim();
+  const file = $("proof").files[0];
+
+  if(!name || !file || !selectedDevice){
+    setStatus("Please choose your device, enter your name and upload your payment proof.", "error");
+    return;
+  }
+  if(file.size > MAX_FILE_MB * 1024 * 1024){
+    setStatus("Maximum file size is " + MAX_FILE_MB + "MB.", "error");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("device", selectedDevice);
+  formData.append("proof", file);
+
+  $("submitBtn").disabled = true;
+  setStatus("Submitting payment proof...");
+
+  try{
+    const response = await fetch("/api/orders", {method:"POST", body:formData});
+    const data = await readJson(response);
+    if(!response.ok || !data.orderId){
+      throw new Error(data.error || "Submission failed. Please try again.");
+    }
+    saveOrder(data.orderId);
+    setStatus("");
+    showLocked(data.orderId);
+    startPolling();
+  }catch(error){
+    setStatus(error.message, "error");
+    $("submitBtn").disabled = false;
+  }
 };
 
-
-/* CHECK APPROVAL */
+/* ---------- CHECK APPROVAL ---------- */
+function startPolling(){
+  clearTimeout(pollTimer);
+  pollStart = Date.now();
+  checkOrder();
+}
 
 async function checkOrder(){
+  if(!orderId) return;
 
-if(!orderId)
-return;
+  if(Date.now() - pollStart > POLL_TIMEOUT_MS){
+    $("lockedText").textContent =
+      "Still waiting? Refresh this page later to check again, or contact support: " + SUPPORT_CONTACT;
+    return;
+  }
 
+  try{
+    const response = await fetch("/api/orders/" + encodeURIComponent(orderId));
+    const data = await readJson(response);
 
-try{
+    if(response.status === 404){
+      resetFlow();
+      setStatus("We couldn't find that order. Please submit your payment proof again.", "error");
+      return;
+    }
 
-const response=
-await fetch(
-"/api/orders/"
-+
-encodeURIComponent(orderId)
-);
+    if(data.status === "approved"){
+      $("lockedCard").classList.add("hidden");
+      $("resultCard").classList.remove("hidden");
+      $("resultText").textContent = "Your " + data.device + " sensitivity has been unlocked.";
+      renderSettings(data.settings);
+      return;
+    }
 
+    if(data.status === "rejected"){
+      $("badge").textContent = "REJECTED";
+      $("lockedText").textContent =
+        "Your payment proof was rejected. Contact support: " + SUPPORT_CONTACT + " or start a new order.";
+      $("newOrderBtn").classList.remove("hidden");
+      clearOrder();
+      return;
+    }
+  }catch(e){ /* network hiccup, retry below */ }
 
-const data=
-await response.json();
-
-
-if(
-data.status ===
-"approved"
-){
-
-document.getElementById(
-"lockedCard"
-).classList.add(
-"hidden"
-);
-
-
-document.getElementById(
-"resultCard"
-).classList.remove(
-"hidden"
-);
-
-
-document.getElementById(
-"resultText"
-).textContent=
-"Your "
-+
-data.device
-+
-" sensitivity has been unlocked.";
-
-return;
-
+  pollTimer = setTimeout(checkOrder, POLL_MS);
 }
 
-
-if(
-data.status ===
-"rejected"
-){
-
-document.getElementById(
-"status"
-).className="error";
-
-document.getElementById(
-"status"
-).textContent=
-"Your payment proof was rejected. Please contact support.";
-
-return;
-
+/* ---------- RESUME ON PAGE LOAD ---------- */
+const savedOrder = loadOrder();
+if(savedOrder){
+  showLocked(savedOrder);
+  startPolling();
 }
-
-
-setTimeout(
-checkOrder,
-5000
-);
-
-
-}catch(error){
-
-setTimeout(
-checkOrder,
-5000
-);
-
-}
-
-}
-
 </script>
-
 </body>
 </html>

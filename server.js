@@ -1,242 +1,139 @@
 const express = require("express");
 const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
 const crypto = require("crypto");
+const fs = require("fs");
+const path = require("path");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "change-me";
 
-const ADMIN_PASSWORD =
-  process.env.ADMIN_PASSWORD || "CHANGE_THIS_PASSWORD";
-
-const DATA_DIR = path.join(__dirname, "data");
+const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, "data");
 const UPLOAD_DIR = path.join(DATA_DIR, "uploads");
-const DATABASE = path.join(DATA_DIR, "orders.json");
-
+const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
 fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 
-if (!fs.existsSync(DATABASE)) {
-  fs.writeFileSync(DATABASE, "[]");
-}
-
-const upload = multer({
-  dest: UPLOAD_DIR,
-  limits: {
-    fileSize: 25 * 1024 * 1024
-  }
-});
-
 app.use(express.json());
-app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "public", "index.html"));
-});
-app.use(
-  express.static(path.join(__dirname, "public"))
-);
 
-app.use(
-  "/uploads",
-  express.static(UPLOAD_DIR)
-);
+/* ---------- SETTINGS (edit these) ---------- */
+const DEFAULT_SETTINGS = {
+  "General": 180, "Red Dot": 170, "2x Scope": 165,
+  "4x Scope": 155, "Sniper": 90, "Free Look": 120
+};
+// Optional per-device overrides, for example:
+// "iPhone 13": { "General": 190, "Red Dot": 180, "2x Scope": 170, "4x Scope": 160, "Sniper": 95, "Free Look": 125 }
+const DEVICE_SETTINGS = {};
 
-function getOrders() {
-  return JSON.parse(
-    fs.readFileSync(DATABASE, "utf8")
-  );
+/* ---------- STORAGE ---------- */
+function loadOrders() {
+  try { return JSON.parse(fs.readFileSync(ORDERS_FILE, "utf8")); }
+  catch (e) { return {}; }
 }
-
 function saveOrders(orders) {
-  fs.writeFileSync(
-    DATABASE,
-    JSON.stringify(orders, null, 2)
-  );
+  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2));
 }
 
-function createOrderId() {
-  return (
-    "SP-" +
-    Date.now().toString(36).toUpperCase() +
-    "-" +
-    crypto.randomBytes(2).toString("hex").toUpperCase()
-  );
+/* ---------- UPLOADS ---------- */
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: UPLOAD_DIR,
+    filename: (req, file, cb) =>
+      cb(null, crypto.randomUUID() + path.extname(file.originalname).slice(0, 10))
+  }),
+  limits: { fileSize: 25 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    if (/^(image|video)\//.test(file.mimetype)) cb(null, true);
+    else cb(new Error("Only image or video files are allowed."));
+  }
+});
+
+/* ---------- ADMIN AUTH (Bearer password) ---------- */
+function adminAuth(req, res, next) {
+  const header = req.headers.authorization || "";
+  const pass = header.startsWith("Bearer ") ? header.slice(7) : "";
+  const a = Buffer.from(pass), b = Buffer.from(ADMIN_PASSWORD);
+  if (a.length === b.length && crypto.timingSafeEqual(a, b)) return next();
+  res.status(401).json({ error: "Unauthorized" });
 }
 
-function authenticate(req, res, next) {
-  const authorization =
-    req.headers.authorization;
+/* ---------- PAGES ---------- */
+app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
+app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "admin.html")));
+app.get("/admin.html", (req, res) => res.sendFile(path.join(__dirname, "admin.html")));
+app.use("/uploads", express.static(UPLOAD_DIR));
 
-  if (
-    authorization !==
-    "Bearer " + ADMIN_PASSWORD
-  ) {
-    return res.status(401).json({
-      error: "Unauthorized"
-    });
+/* ---------- CUSTOMER API ---------- */
+app.post("/api/orders", upload.single("proof"), (req, res) => {
+  const name = (req.body.name || "").trim().slice(0, 60);
+  const device = (req.body.device || "").trim().slice(0, 60);
+  if (!name || !device || !req.file) {
+    return res.status(400).json({ error: "Name, device and payment proof are required." });
   }
+  const orders = loadOrders();
+  const id = crypto.randomUUID();
+  orders[id] = {
+    id, name, device,
+    proofFile: req.file.filename,
+    status: "pending",
+    createdAt: new Date().toISOString()
+  };
+  saveOrders(orders);
+  res.json({ orderId: id });
+});
 
-  next();
+app.get("/api/orders/:id", (req, res) => {
+  const order = loadOrders()[req.params.id];
+  if (!order) return res.status(404).json({ error: "Order not found" });
+  const out = { status: order.status, device: order.device };
+  if (order.status === "approved") {
+    out.settings = DEVICE_SETTINGS[order.device] || DEFAULT_SETTINGS;
+  }
+  res.json(out);
+});
+
+/* ---------- ADMIN API ---------- */
+app.get("/api/admin/orders", adminAuth, (req, res) => {
+  const orders = Object.values(loadOrders())
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .map(o => ({ ...o, proofUrl: "/uploads/" + o.proofFile }));
+  res.json({ orders });
+});
+
+function changeStatus(id, status, res) {
+  if (!["approved", "rejected", "pending"].includes(status)) {
+    return res.status(400).json({ error: "Invalid status" });
+  }
+  const orders = loadOrders();
+  const order = orders[id];
+  if (!order) return res.status(404).json({ error: "Order not found" });
+  order.status = status;
+  saveOrders(orders);
+  res.json({ ok: true, status });
 }
 
-app.post(
-  "/api/orders",
-  upload.single("proof"),
-  (req, res) => {
+// Style 1: POST /api/admin/orders/:id/approve  and  /reject
+app.post("/api/admin/orders/:id/approve", adminAuth, (req, res) =>
+  changeStatus(req.params.id, "approved", res));
+app.post("/api/admin/orders/:id/reject", adminAuth, (req, res) =>
+  changeStatus(req.params.id, "rejected", res));
 
-    if (!req.file) {
-      return res.status(400).json({
-        error: "Payment proof is required"
-      });
-    }
+// Style 2: POST /api/admin/approve/:id  and  /reject/:id
+app.post("/api/admin/approve/:id", adminAuth, (req, res) =>
+  changeStatus(req.params.id, "approved", res));
+app.post("/api/admin/reject/:id", adminAuth, (req, res) =>
+  changeStatus(req.params.id, "rejected", res));
 
-    if (
-      !req.body.name ||
-      !req.body.device
-    ) {
-      return res.status(400).json({
-        error: "Name and device are required"
-      });
-    }
+// Style 3: POST or PATCH /api/admin/orders/:id with { status: "approved" }
+function bodyStatus(req, res) {
+  changeStatus(req.params.id, req.body && req.body.status, res);
+}
+app.post("/api/admin/orders/:id", adminAuth, bodyStatus);
+app.patch("/api/admin/orders/:id", adminAuth, bodyStatus);
 
-    const orderId = createOrderId();
+/* ---------- ERRORS ---------- */
+app.use((err, req, res, next) => {
+  const msg = err.code === "LIMIT_FILE_SIZE" ? "Maximum file size is 25MB." : err.message;
+  res.status(400).json({ error: msg || "Something went wrong." });
+});
 
-    const extension =
-      path.extname(
-        req.file.originalname
-      ).toLowerCase();
-
-    const filename =
-      orderId + extension;
-
-    fs.renameSync(
-      req.file.path,
-      path.join(
-        UPLOAD_DIR,
-        filename
-      )
-    );
-
-    const orders = getOrders();
-
-    orders.push({
-      orderId,
-      name:
-        req.body.name.slice(0, 80),
-      device:
-        req.body.device.slice(0, 80),
-      status: "pending",
-      createdAt:
-        new Date().toISOString(),
-      proofUrl:
-        "/uploads/" + filename
-    });
-
-    saveOrders(orders);
-
-    res.json({
-      orderId
-    });
-  }
-);
-
-app.get(
-  "/api/orders/:id",
-  (req, res) => {
-
-    const order =
-      getOrders().find(
-        x =>
-          x.orderId ===
-          req.params.id
-      );
-
-    if (!order) {
-      return res.status(404).json({
-        error: "Order not found"
-      });
-    }
-
-    res.json({
-      orderId: order.orderId,
-      status: order.status,
-      device: order.device
-    });
-  }
-);
-
-app.get(
-  "/api/admin/orders",
-  authenticate,
-  (req, res) => {
-
-    const orders =
-      getOrders().sort(
-        (a, b) =>
-          b.createdAt
-            .localeCompare(a.createdAt)
-      );
-
-    res.json({
-      orders
-    });
-  }
-);
-
-app.post(
-  "/api/admin/orders/:id",
-  authenticate,
-  (req, res) => {
-
-    const orders =
-      getOrders();
-
-    const order =
-      orders.find(
-        x =>
-          x.orderId ===
-          req.params.id
-      );
-
-    if (!order) {
-      return res.status(404).json({
-        error: "Order not found"
-      });
-    }
-
-    if (
-      req.body.action !== "approve" &&
-      req.body.action !== "reject"
-    ) {
-      return res.status(400).json({
-        error: "Invalid action"
-      });
-    }
-
-    order.status =
-      req.body.action === "approve"
-        ? "approved"
-        : "rejected";
-
-    order.reviewedAt =
-      new Date().toISOString();
-
-    saveOrders(orders);
-
-    res.json({
-      success: true,
-      status: order.status
-    });
-  }
-);
-console.log("DIR:", __dirname);
-console.log("PUBLIC EXISTS:", fs.existsSync(path.join(__dirname, "public")));
-console.log("INDEX EXISTS:", fs.existsSync(path.join(__dirname, "public", "index.html")));
-app.listen(
-  PORT,
-  () => {
-    console.log(
-      "SENSI PRO running on port " +
-      PORT
-    );
-  }
-);
+app.listen(PORT, "0.0.0.0", () => console.log("Server running on port " + PORT));

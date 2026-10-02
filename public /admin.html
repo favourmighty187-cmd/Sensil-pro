@@ -1,397 +1,221 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-  <title>SENSI PRO — Admin</title>
-
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: Arial, sans-serif;
-    }
-
-    body {
-      background: #050505;
-      color: white;
-      min-height: 100vh;
-      padding: 20px;
-    }
-
-    .container {
-      max-width: 1000px;
-      margin: auto;
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 25px;
-    }
-
-    .logo {
-      font-size: 32px;
-      font-weight: 900;
-      color: #00ff88;
-      text-shadow: 0 0 15px #00ff88;
-    }
-
-    .subtitle {
-      color: #aaa;
-      margin-top: 5px;
-    }
-
-    .card {
-      background: #101010;
-      border: 1px solid #222;
-      border-radius: 18px;
-      padding: 20px;
-      margin-bottom: 20px;
-    }
-
-    h2 {
-      margin-bottom: 15px;
-    }
-
-    input {
-      width: 100%;
-      padding: 14px;
-      border-radius: 10px;
-      border: 1px solid #333;
-      background: #080808;
-      color: white;
-      outline: none;
-      margin-bottom: 12px;
-    }
-
-    button {
-      border: none;
-      border-radius: 10px;
-      padding: 12px 18px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .login-btn {
-      width: 100%;
-      background: #00ff88;
-      color: #000;
-    }
-
-    .logout-btn {
-      background: #222;
-      color: white;
-      margin-bottom: 20px;
-    }
-
-    .orders {
-      display: grid;
-      gap: 15px;
-    }
-
-    .order {
-      background: #080808;
-      border: 1px solid #252525;
-      border-radius: 15px;
-      padding: 18px;
-    }
-
-    .order-id {
-      color: #00ff88;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-
-    .info {
-      margin: 7px 0;
-      color: #ccc;
-    }
-
-    .status {
-      display: inline-block;
-      padding: 6px 10px;
-      border-radius: 20px;
-      font-size: 13px;
-      margin: 8px 0;
-    }
-
-    .pending {
-      background: #3b3200;
-      color: #ffd900;
-    }
-
-    .approved {
-      background: #003d22;
-      color: #00ff88;
-    }
-
-    .rejected {
-      background: #3d0000;
-      color: #ff5555;
-    }
-
-    .proof {
-      width: 100%;
-      max-height: 450px;
-      object-fit: contain;
-      background: #000;
-      border-radius: 10px;
-      margin: 12px 0;
-    }
-
-    .actions {
-      display: flex;
-      gap: 10px;
-      margin-top: 12px;
-    }
-
-    .approve {
-      background: #00ff88;
-      color: #000;
-      flex: 1;
-    }
-
-    .reject {
-      background: #ff3333;
-      color: white;
-      flex: 1;
-    }
-
-    .message {
-      padding: 12px;
-      border-radius: 10px;
-      background: #151515;
-      color: #aaa;
-      margin-top: 10px;
-    }
-
-    .hidden {
-      display: none;
-    }
-
-    .empty {
-      text-align: center;
-      color: #777;
-      padding: 30px;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SENSI PRO Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#07070b;color:#fff}
+.container{max-width:900px;margin:auto;padding:25px 16px}
+.card{background:#11121a;border:1px solid #292b38;border-radius:20px;padding:22px;margin-bottom:18px}
+.purple{color:#7c5cff}
+.muted{color:#a8a9b5}
+h1{margin-bottom:6px}
+input,button{width:100%;padding:14px;margin-top:10px;border-radius:11px;border:1px solid #363847;background:#191b25;color:#fff;font-size:15px}
+button{border:0;font-weight:bold;cursor:pointer}
+.primary{background:#7c5cff}
+.approve{background:#1f9d57}
+.reject{background:#d64557}
+.row{display:flex;gap:10px}
+.hidden{display:none}
+.empty{color:#a8a9b5;text-align:center;padding:20px}
+.order{background:#191a24;border-radius:14px;padding:16px;margin-top:14px;line-height:1.7}
+.badge{display:inline-block;padding:5px 10px;border-radius:20px;font-size:12px;background:#292b38}
+.badge.approved{background:#1f9d57}
+.badge.rejected{background:#d64557}
+.proof{margin-top:10px}
+.proof img,.proof video{max-width:100%;max-height:360px;border-radius:10px}
+.error{color:#ff6677;margin-top:10px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.top button{width:auto;padding:10px 16px;margin:0}
+</style>
 </head>
-
 <body>
-
 <div class="container">
 
-  <div class="header">
-    <div class="logo">SENSI PRO</div>
-    <div class="subtitle">Admin Payment Dashboard</div>
-  </div>
+<div class="card" id="loginCard">
+  <h1>SENSI <span class="purple">PRO</span> Admin</h1>
+  <p class="muted">Enter your admin password.</p>
+  <input id="password" type="password" placeholder="Admin password" autocomplete="current-password">
+  <button class="primary" id="loginBtn">Log in</button>
+  <p class="error" id="loginError"></p>
+</div>
 
-  <!-- LOGIN -->
-  <div id="loginBox" class="card">
-
-    <h2>🔐 Admin Login</h2>
-
-    <input
-      type="password"
-      id="password"
-      placeholder="Enter admin password"
-    >
-
-    <button
-      class="login-btn"
-      onclick="login()"
-    >
-      LOGIN
-    </button>
-
-    <div id="loginMessage"></div>
-
-  </div>
-
-
-  <!-- DASHBOARD -->
-  <div id="dashboard" class="hidden">
-
-    <button
-      class="logout-btn"
-      onclick="logout()"
-    >
-      Logout
-    </button>
-
-    <div class="card">
-
-      <h2>💳 Payment Orders</h2>
-
-      <button
-        class="login-btn"
-        onclick="loadOrders()"
-      >
-        🔄 Refresh Orders
-      </button>
-
-      <div id="orders" class="orders">
-        <div class="empty">
-          Loading orders...
-        </div>
+<div class="hidden" id="panel">
+  <div class="card">
+    <div class="top">
+      <div>
+        <h1>Orders</h1>
+        <p class="muted" id="count"></p>
       </div>
-
+      <div class="row">
+        <button class="primary" id="refreshBtn">Refresh</button>
+        <button id="logoutBtn">Log out</button>
+      </div>
     </div>
-
   </div>
+  <div id="orders"></div>
+</div>
 
 </div>
 
-
 <script>
-
+const $ = id => document.getElementById(id);
 let adminPassword = "";
 
+function authHeaders(){
+  return { "Authorization": "Bearer " + adminPassword };
+}
 
 /* LOGIN */
+$("loginBtn").onclick = async () => {
+  adminPassword = $("password").value;
+  $("loginError").textContent = "";
+  if(!adminPassword){ $("loginError").textContent = "Enter your password."; return; }
 
-async function login() {
-
-  const password =
-    document.getElementById("password").value.trim();
-
-  if (!password) {
-
-    document.getElementById("loginMessage").innerHTML =
-      '<div class="message">Enter your password.</div>';
-
-    return;
+  try{
+    const res = await fetch("/api/admin/orders", { headers: authHeaders() });
+    if(res.status === 401){ $("loginError").textContent = "Wrong password."; return; }
+    if(!res.ok){ $("loginError").textContent = "Server error. Try again."; return; }
+    try{ sessionStorage.setItem("sp_admin", adminPassword); }catch(e){}
+    $("loginCard").classList.add("hidden");
+    $("panel").classList.remove("hidden");
+    showOrders((await res.json()).orders);
+  }catch(e){
+    $("loginError").textContent = "Could not connect to server.";
   }
+};
+$("password").addEventListener("keydown", e => { if(e.key === "Enter") $("loginBtn").click(); });
 
-  adminPassword = password;
-
-  try {
-
-    const response = await fetch(
-      "/api/admin/orders",
-      {
-        headers: {
-          "Authorization":
-            "Bearer " + adminPassword
-        }
-      }
-    );
-
-    if (!response.ok) {
-
-      adminPassword = "";
-
-      document.getElementById("loginMessage").innerHTML =
-        '<div class="message">❌ Incorrect password.</div>';
-
-      return;
-    }
-
-    document.getElementById("loginBox")
-      .classList.add("hidden");
-
-    document.getElementById("dashboard")
-      .classList.remove("hidden");
-
-    displayOrders(
-      await response.json()
-    );
-
-  } catch (error) {
-
-    document.getElementById("loginMessage").innerHTML =
-      '<div class="message">Server connection failed.</div>';
-
-  }
-}
-
+$("logoutBtn").onclick = () => {
+  try{ sessionStorage.removeItem("sp_admin"); }catch(e){}
+  location.reload();
+};
+$("refreshBtn").onclick = loadOrders;
 
 /* LOAD ORDERS */
-
-async function loadOrders() {
-
-  const ordersBox =
-    document.getElementById("orders");
-
-  ordersBox.innerHTML =
-    '<div class="empty">Loading...</div>';
-
-  try {
-
-    const response = await fetch(
-      "/api/admin/orders",
-      {
-        headers: {
-          "Authorization":
-            "Bearer " + adminPassword
-        }
-      }
-    );
-
-    if (!response.ok) {
-
-      ordersBox.innerHTML =
-        '<div class="empty">Session expired or unauthorized.</div>';
-
+async function loadOrders(){
+  const box = $("orders");
+  box.innerHTML = '<div class="empty">Loading...</div>';
+  try{
+    const res = await fetch("/api/admin/orders", { headers: authHeaders() });
+    if(!res.ok){
+      box.innerHTML = '<div class="empty">Session expired or unauthorized. Log out and log in again.</div>';
       return;
     }
-
-    const data =
-      await response.json();
-
-    displayOrders(data);
-
-  } catch (error) {
-
-    ordersBox.innerHTML =
-      '<div class="empty">Could not connect to server.</div>';
-
+    showOrders((await res.json()).orders);
+  }catch(e){
+    box.innerHTML = '<div class="empty">Could not connect to server.</div>';
   }
 }
 
-
 /* DISPLAY ORDERS */
+function showOrders(orders){
+  const box = $("orders");
+  box.innerHTML = "";
+  orders = orders || [];
+  const pending = orders.filter(o => o.status === "pending").length;
+  $("count").textContent = orders.length + " total, " + pending + " pending";
 
-function displayOrders(data) {
-
-  const ordersBox =
-    document.getElementById("orders");
-
-  if (
-    !data.orders ||
-    data.orders.length === 0
-  ) {
-
-    ordersBox.innerHTML =
-      '<div class="empty">No orders yet.</div>';
-
+  if(orders.length === 0){
+    box.innerHTML = '<div class="empty">No orders yet.</div>';
     return;
   }
 
-  ordersBox.innerHTML = "";
-
-  data.orders.forEach(order => {
-
-    const div =
-      document.createElement("div");
-
+  orders.forEach(order => {
+    const div = document.createElement("div");
     div.className = "order";
 
-    const date =
-      new Date(order.createdAt)
-      .toLocaleString();
+    const info = document.createElement("div");
+    const lines = [
+      ["Name", order.name],
+      ["Device", order.device],
+      ["Date", new Date(order.createdAt).toLocaleString()],
+      ["Order ID", order.id]
+    ];
+    lines.forEach(([label, value]) => {
+      const p = document.createElement("div");
+      const b = document.createElement("b");
+      b.textContent = label + ": ";
+      p.appendChild(b);
+      p.append(String(value));
+      info.appendChild(p);
+    });
 
-    let proofHTML = "";
+    const badge = document.createElement("span");
+    badge.className = "badge " + order.status;
+    badge.textContent = order.status.toUpperCase();
+    info.appendChild(badge);
+    div.appendChild(info);
 
-    if (order.proofUrl) {
+    /* proof */
+    if(order.proofUrl){
+      const proof = document.createElement("div");
+      proof.className = "proof";
+      const lower = order.proofUrl.toLowerCase();
+      if(/\.(mp4|webm|mov|m4v|3gp)$/.test(lower)){
+        const v = document.createElement("video");
+        v.src = order.proofUrl;
+        v.controls = true;
+        proof.appendChild(v);
+      }else{
+        const img = document.createElement("img");
+        img.src = order.proofUrl;
+        img.alt = "Payment proof";
+        proof.appendChild(img);
+      }
+      div.appendChild(proof);
+    }
 
-      const url = order.proofUrl;
+    /* buttons */
+    if(order.status === "pending"){
+      const row = document.createElement("div");
+      row.className = "row";
 
-      const lower =
-        url.toLowerCase();
+      const approve = document.createElement("button");
+      approve.className = "approve";
+      approve.textContent = "Approve";
+      approve.onclick = () => updateOrder(order.id, "approve", approve, reject);
 
-      if (
-        lower.endsWith(".mp4") ||
-        lower.endsWith(".web
+      const reject = document.createElement("button");
+      reject.className = "reject";
+      reject.textContent = "Reject";
+      reject.onclick = () => updateOrder(order.id, "reject", approve, reject);
+
+      row.appendChild(approve);
+      row.appendChild(reject);
+      div.appendChild(row);
+    }
+
+    box.appendChild(div);
+  });
+}
+
+/* APPROVE / REJECT */
+async function updateOrder(id, action, b1, b2){
+  b1.disabled = true; b2.disabled = true;
+  try{
+    const res = await fetch(
+      "/api/admin/orders/" + encodeURIComponent(id) + "/" + action,
+      { method: "POST", headers: authHeaders() }
+    );
+    if(!res.ok) throw new Error();
+    loadOrders();
+  }catch(e){
+    alert("Could not update the order. Try again.");
+    b1.disabled = false; b2.disabled = false;
+  }
+}
+
+/* AUTO LOGIN IF SESSION EXISTS */
+try{
+  const saved = sessionStorage.getItem("sp_admin");
+  if(saved){
+    $("password").value = saved;
+    $("loginBtn").click();
+  }
+}catch(e){}
+</script>
+</body>
+</html>
