@@ -56,10 +56,14 @@ function adminAuth(req, res, next) {
   res.status(401).json({ error: "Unauthorized" });
 }
 
-/* ---------- PAGES ---------- */
-app.get("/", (req, res) => res.sendFile(path.join(__dirname, "index.html")));
-app.get("/admin", (req, res) => res.sendFile(path.join(__dirname, "admin.html")));
-app.get("/admin.html", (req, res) => res.sendFile(path.join(__dirname, "admin.html")));
+/* ---------- PAGES (works from /public or main folder) ---------- */
+function findPage(name) {
+  const inPublic = path.join(__dirname, "public", name);
+  return fs.existsSync(inPublic) ? inPublic : path.join(__dirname, name);
+}
+app.get("/", (req, res) => res.sendFile(findPage("index.html")));
+app.get("/admin", (req, res) => res.sendFile(findPage("admin.html")));
+app.get("/admin.html", (req, res) => res.sendFile(findPage("admin.html")));
 app.use("/uploads", express.static(UPLOAD_DIR));
 
 /* ---------- CUSTOMER API ---------- */
@@ -111,19 +115,16 @@ function changeStatus(id, status, res) {
   res.json({ ok: true, status });
 }
 
-// Style 1: POST /api/admin/orders/:id/approve  and  /reject
 app.post("/api/admin/orders/:id/approve", adminAuth, (req, res) =>
   changeStatus(req.params.id, "approved", res));
 app.post("/api/admin/orders/:id/reject", adminAuth, (req, res) =>
   changeStatus(req.params.id, "rejected", res));
 
-// Style 2: POST /api/admin/approve/:id  and  /reject/:id
 app.post("/api/admin/approve/:id", adminAuth, (req, res) =>
   changeStatus(req.params.id, "approved", res));
 app.post("/api/admin/reject/:id", adminAuth, (req, res) =>
   changeStatus(req.params.id, "rejected", res));
 
-// Style 3: POST or PATCH /api/admin/orders/:id with { status: "approved" }
 function bodyStatus(req, res) {
   changeStatus(req.params.id, req.body && req.body.status, res);
 }
