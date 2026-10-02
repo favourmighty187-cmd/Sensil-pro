@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Verify payment — SENSI PRO</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:Arial,sans-serif;background:#07070b;color:#fff}
+.container{max-width:900px;margin:auto;padding:25px 16px 60px}
+.top{display:flex;align-items:center;gap:14px;margin-bottom:18px}
+.back{width:40px;height:40px;border-radius:50%;background:#191b25;border:1px solid #333646;display:flex;align-items:center;justify-content:center;color:#fff;text-decoration:none;font-size:18px;flex-shrink:0}
+.step{color:#a8a9b5;font-size:13px}
+.card{background:#11121a;border:1px solid #292b38;border-radius:20px;padding:22px;margin-bottom:18px;box-shadow:0 10px 35px rgba(0,0,0,.35)}
+h2{margin-bottom:15px}
+.muted{color:#a8a9b5}
+input,button{width:100%;padding:14px;margin-top:10px;border-radius:11px;border:1px solid #363847;background:#191b25;color:#fff;font-size:15px}
+button.primary{background:#7c5cff;border:0;font-weight:bold;cursor:pointer}
+button:disabled{opacity:.5;cursor:not-allowed}
+.hidden{display:none}
+.success{color:#50e58a}
+.error{color:#ff6677}
+.order{background:#191a24;padding:12px;border-radius:10px;margin-top:12px}
+.badge{display:inline-block;padding:6px 10px;background:#292b38;border-radius:20px;font-size:12px}
+.payment{background:#191a24;padding:17px;border-radius:12px;line-height:1.9}
+#status{margin-top:10px}
+button.secondary{background:#191b25}
+</style>
+</head>
+<body>
+<div class="container">
+
+  <div class="top">
+    <a class="back" href="device.html" aria-label="Back">&#8592;</a>
+    <span class="step">Step 2 of 2</span>
+  </div>
+
+  <div class="card" id="formCard">
+    <h2>Payment Verification</h2>
+    <p class="muted" style="margin-bottom:15px">After making the &#8358;800 payment, upload your receipt or a short screen recording showing the payment.</p>
+    <input id="name" type="text" placeholder="Your name / nickname" maxlength="60" autocomplete="nickname" aria-label="Your name or nickname">
+    <input id="proof" type="file" accept="image/*,video/*" aria-label="Payment proof">
+    <button class="primary" id="submitBtn">Submit Payment Proof</button>
+    <p id="status" role="status"></p>
+  </div>
+
+  <div class="card hidden" id="lockedCard">
+    <h2>&#128274; Sensitivity Locked</h2>
+    <p class="muted" id="lockedText">Your payment is being reviewed.</p>
+    <div class="order">
+      Order ID: <b id="orderId">-</b><br><br>
+      <span class="badge" id="badge">AWAITING VERIFICATION</span>
+    </div>
+    <button class="secondary hidden" id="newOrderBtn">Start a new order</button>
+  </div>
+
+  <div class="card hidden" id="resultCard">
+    <h2 class="success">&#10003; Payment Approved</h2>
+    <p id="resultText"></p><br>
+    <div class="payment" id="settingsBox"></div>
+  </div>
+
+</div>
+
+<script>
+const SUPPORT_CONTACT = "WhatsApp: +2347013342843"; // <-- put your real contact here
+const MAX_FILE_MB = 25;
+const POLL_MS = 5000;
+const POLL_TIMEOUT_MS = 30 * 60 * 1000;
+const STORE_KEY = "sensipro_order";
+
+const $ = id => document.getElementById(id);
+let selectedDevice = "";
+try { selectedDevice = sessionStorage.getItem("sp_device") || ""; } catch(e){}
+
+let orderId = "";
+let pollStart = 0;
+let pollTimer = null;
+
+function saveOrder(id){ try{ localStorage.setItem(STORE_KEY, id); }catch(e){} }
+function loadOrder(){ try{ return localStorage.getItem(STORE_KEY) || ""; }catch(e){ return ""; } }
+function clearOrder(){ try{ localStorage.removeItem(STORE_KEY); }catch(e){} }
+
+async function readJson(response){
+  try{ return await response.json(); }catch(e){ return {}; }
+}
+function setStatus(text, cls){
+  $("status").className = cls || "";
+  $("status").textContent = text;
+}
+function showLocked(id){
+  orderId = id;
+  $("formCard").classList.add("hidden");
+  $("orderId").textContent = id;
+  $("lockedText").textContent = "Your payment is being reviewed.";
+  $("badge").textContent = "AWAITING VERIFICATION";
+  $("newOrderBtn").classList.add("hidden");
+  $("lockedCard").classList.remove("hidden");
+}
+function renderSettings(settings){
+  const box = $("settingsBox");
+  box.textContent = "";
+  Object.entries(settings || {}).forEach(([label, value]) => {
+    const line = document.createElement("div");
+    line.append(label + ": ");
+    const b = document.createElement("b");
+    b.textContent = value;
+    line.appendChild(b);
+    box.appendChild(line);
+  });
+}
+function resetFlow(){
+  clearTimeout(pollTimer);
+  clearOrder();
+  orderId = "";
+  $("lockedCard").classList.add("hidden");
+  $("resultCard").classList.add("hidden");
+  $("formCard").classList.remove("hidden");
+  $("proof").value = "";
+  $("submitBtn").disabled = false;
+  setStatus("");
+}
+$("newOrderBtn").onclick = resetFlow;
+
+$("submitBtn").onclick = async () => {
+  const name = $("name").value.trim();
+  const file = $("proof").files[0];
+
+  if(!selectedDevice){
+    location.href = "device.html";
+    return;
+  }
+  if(!name || !file){
+    setStatus("Please enter your name and upload your payment proof.", "error");
+    return;
+  }
+  if(file.size > MAX_FILE_MB * 1024 * 1024){
+    setStatus("Maximum file size is " + MAX_FILE_MB + "MB.", "error");
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("name", name);
+  formData.append("device", selectedDevice);
+  formData.append("proof", file);
+
+  $("submitBtn").disabled = true;
+  setStatus("Submitting payment proof...");
+
+  try{
+    const response = await fetch("/api/orders", {method:"POST", body:formData});
+    const data = await readJson(response);
+    if(!response.ok || !data.orderId){
+      throw new Error(data.error || "Submission failed. Please try again.");
+    }
+    saveOrder(data.orderId);
+    setStatus("");
+    showLocked(data.orderId);
+    startPolling();
+  }catch(error){
+    setStatus(error.message, "error");
+    $("submitBtn").disabled = false;
+  }
+};
+
+function startPolling(){
+  clearTimeout(pollTimer);
+  pollStart = Date.now();
+  checkOrder();
+}
+async function checkOrder(){
+  if(!orderId) return;
+  if(Date.now() - pollStart > POLL_TIMEOUT_MS){
+    $("lockedText").textContent =
+      "Still waiting? Refresh this page later to check again, or contact support: " + SUPPORT_CONTACT;
+    return;
+  }
+  try{
+    const response = await fetch("/api/orders/" + encodeURIComponent(orderId));
+    const data = await readJson(response);
+
+    if(response.status === 404){
+      resetFlow();
+      setStatus("We couldn't find that order. Please submit your payment proof again.", "error");
+      return;
+    }
+    if(data.status === "approved"){
+      $("lockedCard").classList.add("hidden");
+      $("resultCard").classList.remove("hidden");
+      $("resultText").textContent = "Your " + data.device + " sensitivity has been unlocked.";
+      renderSettings(data.settings);
+      return;
+    }
+    if(data.status === "rejected"){
+      $("badge").textContent = "REJECTED";
+      $("lockedText").textContent =
+        "Your payment proof was rejected. Contact support: " + SUPPORT_CONTACT + " or start a new order.";
+      $("newOrderBtn").classList.remove("hidden");
+      clearOrder();
+      return;
+    }
+  }catch(e){ /* retry */ }
+  pollTimer = setTimeout(checkOrder, POLL_MS);
+}
+
+const savedOrder = loadOrder();
+if(savedOrder){
+  showLocked(savedOrder);
+  startPolling();
+}else if(!selectedDevice){
+  location.href = "device.html";
+}
+</script>
+</body>
+</html>
