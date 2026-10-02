@@ -13,13 +13,17 @@ body{font-family:Arial,sans-serif;background:#07070b;color:#fff}
 .step{color:#a8a9b5;font-size:13px}
 .card{background:#11121a;border:1px solid #292b38;border-radius:20px;padding:22px;margin-bottom:18px;box-shadow:0 10px 35px rgba(0,0,0,.35)}
 h2{margin-bottom:15px}
+h3{margin:18px 0 10px;font-size:15px;color:#a8a9b5}
+.search{width:100%;padding:14px;border-radius:11px;border:1px solid #363847;background:#191b25;color:#fff;font-size:15px;margin-bottom:6px}
 .devices{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px}
 .device{padding:15px;background:#191b25;border:1px solid #333646;border-radius:12px;cursor:pointer;text-align:center;transition:.2s;color:#fff;font-size:15px}
 .device:hover{transform:translateY(-2px)}
 .device.active{border-color:#7c5cff;background:#211b3d}
+.empty{color:#a8a9b5;padding:14px 0}
 .price{font-size:38px;font-weight:900;margin:10px 0 15px}
 .payment{background:#191a24;padding:17px;border-radius:12px;line-height:1.9}
 .muted{color:#a8a9b5}
+.hidden{display:none}
 .next{position:fixed;left:0;right:0;bottom:0;padding:16px;background:linear-gradient(to top, #07070b 60%, transparent)}
 .next button{max-width:900px;margin:auto;display:block;width:100%;padding:16px;border-radius:12px;border:0;background:#7c5cff;color:#fff;font-size:16px;font-weight:bold;cursor:pointer}
 .next button:disabled{opacity:.4}
@@ -35,8 +39,10 @@ h2{margin-bottom:15px}
 
   <div class="card">
     <h2>Choose your device</h2>
-    <p class="muted" style="margin-bottom:15px">Your sensitivity numbers are tuned per device.</p>
-    <div class="devices" id="devices"></div>
+    <p class="muted" style="margin-bottom:12px">Your sensitivity numbers are tuned per device. Search or scroll to find yours.</p>
+    <input class="search" id="search" type="search" placeholder="Search your phone (e.g. Tecno, Samsung A15)" aria-label="Search your phone">
+    <div id="groups"></div>
+    <p class="empty hidden" id="empty">No match. Choose "Other" at the bottom of the list.</p>
   </div>
 
   <div class="card">
@@ -56,29 +62,71 @@ h2{margin-bottom:15px}
 </div>
 
 <script>
-const devices = [
-  "Oppo A53","Oppo F1s","Oppo F19","Tecno Spark 20C","Samsung A12","Samsung A13",
-  "Samsung A14","Samsung A15","iPhone 11","iPhone 12","iPhone 13","Redmi Note 10",
-  "Redmi Note 12","Infinix Hot 12","Infinix Hot 30","Tecno Camon 20","Tecno Camon 30",
-  "Vivo Y20","Other"
-];
-const box = document.getElementById("devices");
+const brands = {
+  "Samsung": ["Galaxy A03","Galaxy A04","Galaxy A04s","Galaxy A05","Galaxy A05s","Galaxy A06","Galaxy A10","Galaxy A11","Samsung A12","Samsung A13","Samsung A14","Samsung A15","Galaxy A16","Galaxy A20","Galaxy A21s","Galaxy A22","Galaxy A23","Galaxy A24","Galaxy A25","Galaxy A30","Galaxy A31","Galaxy A32","Galaxy A33","Galaxy A34","Galaxy A35","Galaxy A50","Galaxy A51","Galaxy A52","Galaxy A53","Galaxy A54","Galaxy A55","Galaxy M12","Galaxy M13","Galaxy M14","Galaxy M31","Galaxy M32","Galaxy S10","Galaxy S20","Galaxy S21","Galaxy S22","Galaxy S23","Galaxy S24"],
+  "Tecno": ["Tecno Spark 6","Tecno Spark 7","Tecno Spark 8","Tecno Spark 9","Tecno Spark 10","Tecno Spark 20","Tecno Spark 20C","Tecno Spark 30","Tecno Spark Go","Tecno Camon 17","Tecno Camon 18","Tecno Camon 19","Tecno Camon 20","Tecno Camon 30","Tecno Pova 3","Tecno Pova 4","Tecno Pova 5","Tecno Pova 6","Tecno Phantom X","Tecno Phantom X2"],
+  "Infinix": ["Infinix Hot 9","Infinix Hot 10","Infinix Hot 11","Infinix Hot 12","Infinix Hot 20","Infinix Hot 30","Infinix Hot 40","Infinix Note 10","Infinix Note 11","Infinix Note 12","Infinix Note 30","Infinix Note 40","Infinix Smart 6","Infinix Smart 7","Infinix Smart 8","Infinix Zero 20","Infinix Zero 30"],
+  "itel": ["itel A56","itel A60","itel P40","itel P55","itel S23","itel Vision 3"],
+  "Oppo": ["Oppo A15","Oppo A16","Oppo A17","Oppo A31","Oppo A52","Oppo A53","Oppo A54","Oppo A55","Oppo A57","Oppo A58","Oppo A74","Oppo A76","Oppo A78","Oppo A96","Oppo F1s","Oppo F9","Oppo F11","Oppo F17","Oppo F19","Oppo F21","Oppo Reno 5","Oppo Reno 6","Oppo Reno 7","Oppo Reno 8"],
+  "Xiaomi / Redmi / Poco": ["Redmi 9","Redmi 9A","Redmi 9C","Redmi 10","Redmi 12","Redmi 12C","Redmi Note 8","Redmi Note 9","Redmi Note 10","Redmi Note 11","Redmi Note 12","Redmi Note 13","Poco X3","Poco X4 Pro","Poco X5","Poco X6","Poco M4 Pro","Poco F3","Poco F5"],
+  "Vivo": ["Vivo Y12","Vivo Y15","Vivo Y20","Vivo Y21","Vivo Y22","Vivo Y33s","Vivo Y36","Vivo V20","Vivo V21","Vivo V23","Vivo V25","Vivo V27"],
+  "Realme": ["Realme C11","Realme C15","Realme C21","Realme C25","Realme C30","Realme C33","Realme C35","Realme C53","Realme 8","Realme 9","Realme 10","Realme 11","Realme Narzo 50"],
+  "iPhone": ["iPhone 6s","iPhone 7","iPhone 8","iPhone X","iPhone XR","iPhone XS","iPhone 11","iPhone 12","iPhone 13","iPhone 14","iPhone 15"],
+  "Huawei / Honor": ["Huawei Y7","Huawei Y9","Huawei P30","Huawei Nova 7i","Honor X7","Honor X8","Honor 8X"],
+  "Others": ["Google Pixel 6","Google Pixel 7","OnePlus 9","OnePlus Nord","Motorola G","Nokia G","Other"]
+};
+
+const groupsBox = document.getElementById("groups");
+const emptyMsg = document.getElementById("empty");
 const continueBtn = document.getElementById("continueBtn");
 let selected = "";
 try { selected = sessionStorage.getItem("sp_device") || ""; } catch(e){}
 
-devices.forEach(device => {
-  const el = document.createElement("div");
-  el.className = "device" + (device === selected ? " active" : "");
-  el.textContent = device;
-  el.onclick = () => {
-    document.querySelectorAll(".device").forEach(x => x.classList.remove("active"));
-    el.classList.add("active");
-    selected = device;
-    continueBtn.disabled = false;
-  };
-  box.appendChild(el);
+const sections = [];
+
+Object.entries(brands).forEach(([brand, list]) => {
+  const wrap = document.createElement("div");
+  const title = document.createElement("h3");
+  title.textContent = brand;
+  const grid = document.createElement("div");
+  grid.className = "devices";
+  wrap.appendChild(title);
+  wrap.appendChild(grid);
+
+  const items = list.map(name => {
+    const el = document.createElement("div");
+    el.className = "device" + (name === selected ? " active" : "");
+    el.textContent = name;
+    el.onclick = () => {
+      document.querySelectorAll(".device").forEach(x => x.classList.remove("active"));
+      el.classList.add("active");
+      selected = name;
+      continueBtn.disabled = false;
+    };
+    grid.appendChild(el);
+    return el;
+  });
+
+  groupsBox.appendChild(wrap);
+  sections.push({ wrap, items });
 });
+
+document.getElementById("search").addEventListener("input", e => {
+  const q = e.target.value.trim().toLowerCase();
+  let any = false;
+  sections.forEach(s => {
+    let shown = 0;
+    s.items.forEach(el => {
+      const match = !q || el.textContent.toLowerCase().includes(q);
+      el.classList.toggle("hidden", !match);
+      if (match) shown++;
+    });
+    s.wrap.classList.toggle("hidden", shown === 0);
+    if (shown) any = true;
+  });
+  emptyMsg.classList.toggle("hidden", any);
+});
+
 if (selected) continueBtn.disabled = false;
 
 continueBtn.onclick = () => {
